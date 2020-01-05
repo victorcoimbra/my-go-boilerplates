@@ -12,7 +12,7 @@
 
 ## Quick Start
 
-```
+
 1. Install Go dependencies
 
 ```
