@@ -1,0 +1,107 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: projectx-crud
+
+custom:
+  todosTableName: ${self:service}-${self:provider.stage}
+  todosTableArn: # ARNs are addresses of deployed services in AWS space
+    Fn::Join:
+    - ":"
+    - - arn
+      - aws
+      - dynamodb
+      - Ref: AWS::Region
+      - Ref: AWS::AccountId
+      - table/${self:custom.todosTableName}
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: dev
+  region: us-east-2
+  environment:
+    TODOS_TABLE_NAME: ${self:custom.todosTableName}
+  iamRoleStatements: # Defines what other AWS services our lambda functions can access
+    - Effect: Allow # Allow access to DynamoDB tables
+      Action:
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - ${self:custom.todosTableArn}
+
+package:
+ individually: true
+ exclude:
+   - ./**
+
+functions:
+  crudCreate:
+    handler: ./bin/handlers/create/Create
+    package:
+      include:
+        - ./bin/handlers/create/Create
+    events:
+      - http:
+          path: create
+          method: post
+          cors: true
+  crudRead:
+    handler: ./bin/handlers/read/Read
+    package:
+        include:
+          - ./bin/handlers/read/Read
+    events:
+        - http:
+            path: Read
+            method: get
+            cors: true     
+  crudUpdade:
+    handler: ./bin/handlers/read/Read
+    package:
+        include:
+          - ./bin/handlers/read/Read
+    events:
+        - http:
+            path: Read
+            method: get
+            cors: true        
+  crudDelete:
+    handler: ./bin/handlers/read/Read
+    package:
+        include:
+          - ./bin/handlers/read/Read
+    events:
+        - http:
+            path: Read
+            method: get
+            cors: true   
+
+resources:
+  Resources: # Supporting AWS services
+    TodosTable: # Define a new DynamoDB Table resource to store todo items
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.todosTableName}
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
